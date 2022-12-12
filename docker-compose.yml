@@ -13,7 +13,11 @@ services:
         external_url 'https://gitlab.${CUSTOM_HOSTNAME}'
         nginx['listen_https'] = false
         nginx['listen_port'] = 80
-        gitlab_rails['gitlab_shell_ssh_port'] = 2222
+        gitlab_rails['time_zone'] = 'Europe/Berlin'
+        gitlab_rails['gitlab_default_theme'] = 2
+        gitlab_rails['usage_ping_enabled'] = false
+        prometheus['enable'] = false
+        # gitlab_rails['gitlab_shell_ssh_port'] = 2222
 
     shm_size: '256m'
     ports:
@@ -26,7 +30,7 @@ services:
       - './gitlab_data/data:/var/opt/gitlab'
     networks:
       - traefik_ext
-      - gitlab-network
+      - gitlab_network
     labels:
       # Enable Traefik
       - "traefik.enable=true"
@@ -54,16 +58,19 @@ services:
   gitlab-runner:
     image: gitlab/gitlab-runner:latest
     container_name: gitlab-runner
+    environment:
+      - TZ='Europe/Berlin'
+      - FF_NETWORK_PER_BUILD=true
     volumes:
       - ./runner_data/config/:/etc/gitlab-runner:Z
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
-      gitlab-network:
+      - gitlab_network
     labels:
       - traefik.enable=false
 
 networks:
   traefik_ext:
     external: true
-  gitlab-network:
+  gitlab_network:
     external: false
