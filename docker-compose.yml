@@ -21,11 +21,12 @@ services:
       #  - '443:443'
       - '2222:22'
     volumes:
-      - './data/config:/etc/gitlab'
-      - './data/logs:/var/log/gitlab'
-      - './data/data:/var/opt/gitlab'
+      - './gitlab_data/config:/etc/gitlab'
+      - './gitlab_data/logs:/var/log/gitlab'
+      - './gitlab_data/data:/var/opt/gitlab'
     networks:
       - traefik_ext
+      - gitlab-network
     labels:
       # Enable Traefik
       - "traefik.enable=true"
@@ -50,6 +51,19 @@ services:
       - "traefik.http.middlewares.gitlab-headers.headers.customresponseheaders.X_FORWARDED_PROTO=https"
       - "traefik.http.middlewares.gitlab-headers.headers.customresponseheaders.X_Forwarded-Ssl=on"
 
+  gitlab-runner:
+    image: gitlab/gitlab-runner:latest
+    container_name: gitlab-runner
+    volumes:
+      - ./runner_data/config/:/etc/gitlab-runner:Z
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      gitlab-network:
+    labels:
+      - traefik.enable=false
+
 networks:
   traefik_ext:
     external: true
+  gitlab-network:
+    external: false
